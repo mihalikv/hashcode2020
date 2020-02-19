@@ -1,4 +1,7 @@
 import os
+from collections import Counter
+import numpy as np
+import pandas as pd
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -8,7 +11,10 @@ output_files = [os.path.join(dir_path, 'output', '{}.out'.format(file_name)) for
 
 
 def compute_score():
-    pass
+    # kadeco
+    s = pd.Series([1, 3, 5, np.nan, 6, 8])
+    print(s)
+    print(Counter('abracadabra').most_common(3))
 
 
 def process(input_file_path, output_file_path):
@@ -22,6 +28,7 @@ def process(input_file_path, output_file_path):
 def main():
     for index, input_file_path in enumerate(input_files):
         process(input_file_path, output_files[index])
+    compute_score()
 
 
 if __name__ == "__main__":
