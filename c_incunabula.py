@@ -61,10 +61,11 @@ def process(input_file_path, output_file_path):
         best_lib = next(iter(lib_by_score))
         books_to_remove = library_books[best_lib]
         good_libraries.append(best_lib)
-        result_libraries[best_lib] = books_to_remove
-        del library_books[best_lib]
-        for lib, books in library_books.items():
-            library_books[lib] = books - books_to_remove
+        if len(books_to_remove) != 0:
+            result_libraries[best_lib] = books_to_remove
+            del library_books[best_lib]
+            for lib, books in library_books.items():
+                library_books[lib] = books - books_to_remove
 
     start_time = time.time()
     while len(good_libraries) != number_of_libraries:
