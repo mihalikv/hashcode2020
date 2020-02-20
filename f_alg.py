@@ -5,7 +5,7 @@ import pandas as pd
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-file_names = ['d_tough_choices']
+file_names = ['c_incunabula']
 input_files = [os.path.join(dir_path, 'input', '{}.txt'.format(file_name)) for file_name in file_names]
 output_files = [os.path.join(dir_path, 'output', '{}.out'.format(file_name)) for file_name in file_names]
 
@@ -68,12 +68,18 @@ def process(input_file_path, output_file_path):
 
     while days_left > -100:
         good_library, good_books = _get_score()
-        days_left -= library_definition[good_library][1]
+        if good_library is None:
+            break
+
+        days_left_test = days_left - library_definition[good_library][1]
         del library_definition[good_library]
+        if days_left_test < 0:
+            continue
+        days_left = days_left_test
         result_libraries[good_library] = good_books
         print(days_left)
         for lib, books in library_books.items():
-            library_books[lib] = list(set(books)-set(good_books))
+            library_books[lib] = list(set(books) - set(good_books))
             library_books[lib].sort(key=lambda book_index: books_scores[book_index], reverse=True)
 
     output_file.write('{}\n'.format(len(result_libraries.keys())))
