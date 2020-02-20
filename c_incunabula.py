@@ -1,7 +1,10 @@
 import os
 from collections import Counter, OrderedDict
+from copy import deepcopy
+
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -41,19 +44,36 @@ def process(input_file_path, output_file_path):
                 library_sign_len[lib_index] = definition[1]
             else:
                 # books in lib
-                library_books[lib_index] = [int(i) for i in line_striped.split(' ')]
+                library_books[lib_index] = set([int(i) for i in line_striped.split(' ')])
                 lib_index += 1
 
     # lib with score defined as score/pocet dni na sign up
-    good_libraries = {}
-    lib_by_score = {}
-    for lib, lib_books in library_books.items():
-        lib_by_score[lib] = sum(lib_books) / library_sign_len[lib]
-    lib_by_score = {k: v for k, v in sorted(lib_by_score.items(), key=lambda item: item[1], reverse=True)}
+    library_books_2 = deepcopy(library_books)
+    good_libraries = []
 
+    # for lib, book in library_books_2.items():
+    def _compute_score():
+        lib_by_score = {}
+        for lib, lib_books in library_books.items():
+            if lib not in good_libraries:
+                lib_by_score[lib] = sum(lib_books) / library_sign_len[lib]
+        lib_by_score = {k: v for k, v in sorted(lib_by_score.items(), key=lambda item: item[1], reverse=True)}
+        best_lib = list(lib_by_score.keys())[0]
+        books_to_remove = library_books[best_lib]
+        good_libraries.append(best_lib)
+        for lib, books in library_books.items():
+            if lib not in good_libraries:
+                library_books[lib] = books - books_to_remove
 
-    for lib, _ in lib_by_score.items():
-        result_libraries[lib] = library_books[lib]
+    pbar = tqdm(total=number_of_libraries, mininterval=5)
+
+    while len(good_libraries) != number_of_libraries:
+        _compute_score()
+        pbar.update(1)
+    pbar.close()
+
+    for good_lib in good_libraries:
+        result_libraries[good_lib] = library_books[good_lib]
 
     output_file.write('{}\n'.format(len(result_libraries.keys())))
     for result_lib, result_books in result_libraries.items():
