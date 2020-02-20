@@ -1,15 +1,11 @@
 import os
-import time
 from collections import Counter, OrderedDict
-from copy import deepcopy
-
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-file_names = ['c_incunabula']
+file_names = ['b_read_on']
 input_files = [os.path.join(dir_path, 'input', '{}.txt'.format(file_name)) for file_name in file_names]
 output_files = [os.path.join(dir_path, 'output', '{}.out'.format(file_name)) for file_name in file_names]
 
@@ -45,31 +41,13 @@ def process(input_file_path, output_file_path):
                 library_sign_len[lib_index] = definition[1]
             else:
                 # books in lib
-                library_books[lib_index] = set([int(i) for i in line_striped.split(' ')])
+                library_books[lib_index] = [int(i) for i in line_striped.split(' ')]
                 lib_index += 1
 
-    # lib with score defined as score/pocet dni na sign up
-    library_books_2 = deepcopy(library_books)
-    good_libraries = []
-    # for lib, book in library_books_2.items():
-    def _compute_score():
-        lib_by_score = {}
-        for lib, lib_books in library_books.items():
-            lib_by_score[lib] = sum(lib_books) / library_sign_len[lib]
-        lib_by_score = {k: v for k, v in sorted(lib_by_score.items(), key=lambda item: item[1], reverse=True)}
 
-        best_lib = next(iter(lib_by_score))
-        books_to_remove = library_books[best_lib]
-        good_libraries.append(best_lib)
-        result_libraries[best_lib] = books_to_remove
-        del library_books[best_lib]
-        for lib, books in library_books.items():
-            library_books[lib] = books - books_to_remove
-
-    start_time = time.time()
-    while len(good_libraries) != number_of_libraries:
-        _compute_score()
-    print("--- %s seconds ---" % (time.time() - start_time))
+    lowest_sign_len = {k: v for k, v in sorted(library_sign_len.items(), key=lambda item: item[1])}
+    for lib, _ in lowest_sign_len.items():
+        result_libraries[lib] = library_books[lib]
 
     output_file.write('{}\n'.format(len(result_libraries.keys())))
     for result_lib, result_books in result_libraries.items():
