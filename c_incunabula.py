@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-file_names = ['c_incunabula']
+file_names = ['f_libraries_of_the_world']
 input_files = [os.path.join(dir_path, 'input', '{}.txt'.format(file_name)) for file_name in file_names]
 output_files = [os.path.join(dir_path, 'output', '{}.out'.format(file_name)) for file_name in file_names]
 
@@ -19,7 +19,7 @@ def process(input_file_path, output_file_path):
     number_of_books = None
     number_of_libraries = None
     len_days = None
-    books = []
+    books_scores = []
     library_definition = {
     }
     library_sign_len = {}
@@ -37,7 +37,7 @@ def process(input_file_path, output_file_path):
             if index == 0:
                 number_of_books, number_of_libraries, len_days = [int(i) for i in line_striped.split(' ')]
             elif index == 1:
-                books = [int(i) for i in line.split(' ')]
+                books_scores = [int(i) for i in line.split(' ')]
             elif index % 2 == 0:
                 # lib definition
                 definition = [int(i) for i in line_striped.split(' ')]
@@ -51,11 +51,13 @@ def process(input_file_path, output_file_path):
     # lib with score defined as score/pocet dni na sign up
     library_books_2 = deepcopy(library_books)
     good_libraries = []
+
     # for lib, book in library_books_2.items():
     def _compute_score():
         lib_by_score = {}
         for lib, lib_books in library_books.items():
-            lib_by_score[lib] = sum(lib_books) / library_sign_len[lib]
+            lib_books_score = sum([books_scores[i] for i in lib_books])
+            lib_by_score[lib] = lib_books_score / library_sign_len[lib]
         lib_by_score = {k: v for k, v in sorted(lib_by_score.items(), key=lambda item: item[1], reverse=True)}
 
         best_lib = next(iter(lib_by_score))

@@ -5,7 +5,7 @@ import pandas as pd
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-file_names = ['e_so_many_books']
+file_names = ['d_tough_choices']
 input_files = [os.path.join(dir_path, 'input', '{}.txt'.format(file_name)) for file_name in file_names]
 output_files = [os.path.join(dir_path, 'output', '{}.out'.format(file_name)) for file_name in file_names]
 
@@ -47,8 +47,8 @@ def process(input_file_path, output_file_path):
                 lib_index += 1
 
     # sort books by score
-    for lib, books in library_books.items():
-        books.sort(key=lambda book_index: books_scores[book_index], reverse=True)
+    # for lib, books in library_books.items():
+    #     books.sort(key=lambda book_index: books_scores[book_index], reverse=True)
     # sort books by score
 
     days_left = len_days
@@ -59,7 +59,7 @@ def process(input_file_path, output_file_path):
         best_lib_books = None
         for lib, definition in library_definition.items():
             days_available = (days_left - definition[1]) * definition[2]
-            sum_lib_per_days = sum([books_scores[i] for i in library_books[lib][:days_available]])
+            sum_lib_per_days = sum([books_scores[i] for i in library_books[lib][:days_available]]) / definition[1]
             if best_lib_score is None or best_lib_score < sum_lib_per_days:
                 best_lib_score = sum_lib_per_days
                 best_lib = lib
@@ -73,7 +73,8 @@ def process(input_file_path, output_file_path):
         result_libraries[good_library] = good_books
         print(days_left)
         for lib, books in library_books.items():
-            library_books[lib] = [book for book in books if book not in good_books]
+            library_books[lib] = list(set(books)-set(good_books))
+            library_books[lib].sort(key=lambda book_index: books_scores[book_index], reverse=True)
 
     output_file.write('{}\n'.format(len(result_libraries.keys())))
     for result_lib, result_books in result_libraries.items():
