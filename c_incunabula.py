@@ -1,4 +1,5 @@
 import os
+import time
 from collections import Counter, OrderedDict
 from copy import deepcopy
 
@@ -50,7 +51,7 @@ def process(input_file_path, output_file_path):
     # lib with score defined as score/pocet dni na sign up
     library_books_2 = deepcopy(library_books)
     good_libraries = []
-
+    good_libraries_dict = {}
     # for lib, book in library_books_2.items():
     def _compute_score():
         lib_by_score = {}
@@ -58,19 +59,18 @@ def process(input_file_path, output_file_path):
             if lib not in good_libraries:
                 lib_by_score[lib] = sum(lib_books) / library_sign_len[lib]
         lib_by_score = {k: v for k, v in sorted(lib_by_score.items(), key=lambda item: item[1], reverse=True)}
-        best_lib = list(lib_by_score.keys())[0]
+
+        best_lib = next(iter(lib_by_score))
         books_to_remove = library_books[best_lib]
         good_libraries.append(best_lib)
         for lib, books in library_books.items():
             if lib not in good_libraries:
                 library_books[lib] = books - books_to_remove
 
-    pbar = tqdm(total=number_of_libraries, mininterval=5)
-
-    while len(good_libraries) != number_of_libraries:
+    start_time = time.time()
+    while len(good_libraries) != 400:
         _compute_score()
-        pbar.update(1)
-    pbar.close()
+    print("--- %s seconds ---" % (time.time() - start_time))
 
     for good_lib in good_libraries:
         result_libraries[good_lib] = library_books[good_lib]
