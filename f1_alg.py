@@ -2,11 +2,10 @@ import os
 from collections import Counter, OrderedDict
 import numpy as np
 import pandas as pd
-from numba import jit
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-file_names = ['f_libraries_of_the_world']
+file_names = ['e_so_many_books']
 input_files = [os.path.join(dir_path, 'input', '{}.txt'.format(file_name)) for file_name in file_names]
 output_files = [os.path.join(dir_path, 'output', '{}.out'.format(file_name)) for file_name in file_names]
 
@@ -51,6 +50,8 @@ def process(input_file_path, output_file_path):
     # for lib, books in library_books.items():
     #     books.sort(key=lambda book_index: books_scores[book_index], reverse=True)
     # sort books by score
+    avg_parallel_days = sum([i[2] for k, i in library_definition.items()]) / number_of_libraries
+    avg_sign_up = sum([i[1] for k, i in library_definition.items()]) / number_of_libraries
 
     days_left = len_days
 
@@ -60,9 +61,10 @@ def process(input_file_path, output_file_path):
         best_lib_books = None
         for lib, definition in library_definition.items():
             days_available = (days_left - definition[1]) * definition[2]
-            sum_lib_per_days = sum([books_scores[i] for i in library_books[lib][:days_available]]) / definition[1]
-            if best_lib_score is None or best_lib_score < sum_lib_per_days:
-                best_lib_score = sum_lib_per_days
+            avg_books_score = sum([books_scores[i] for i in library_books[lib]])/len(library_books[lib])
+            result_score = (avg_books_score * (definition[2] / avg_parallel_days)) / (definition[1] / avg_sign_up)
+            if best_lib_score is None or best_lib_score < result_score:
+                best_lib_score = result_score
                 best_lib = lib
                 best_lib_books = library_books[lib][:days_available]
         return best_lib, best_lib_books
@@ -83,6 +85,7 @@ def process(input_file_path, output_file_path):
         for lib, books in library_books.items():
             library_books[lib] = list(set(books) - set(good_books))
             library_books[lib].sort(key=lambda book_index: books_scores[book_index], reverse=True)
+
 
     output_file.write('{}\n'.format(len(result_libraries.keys())))
     for result_lib, result_books in result_libraries.items():
