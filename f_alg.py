@@ -1,12 +1,10 @@
 import os
-from collections import Counter, OrderedDict
-import numpy as np
-import pandas as pd
-from numba import jit
+from collections import OrderedDict
+from copy import deepcopy
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-file_names = ['f_libraries_of_the_world']
+file_names = ['e_so_many_books']
 input_files = [os.path.join(dir_path, 'input', '{}.txt'.format(file_name)) for file_name in file_names]
 output_files = [os.path.join(dir_path, 'output', '{}.out'.format(file_name)) for file_name in file_names]
 
@@ -51,7 +49,20 @@ def process(input_file_path, output_file_path):
     # for lib, books in library_books.items():
     #     books.sort(key=lambda book_index: books_scores[book_index], reverse=True)
     # sort books by score
+    num_books_in_libs = {}
+    for lib, books in library_books.items():
+        for book in books:
+            if book in num_books_in_libs:
+                num_books_in_libs[book] += 1
+            else:
+                num_books_in_libs[book] = 1
+    for book, occurrence in num_books_in_libs.items():
+        num_books_in_libs[book] = 1/occurrence
+    score_of_book_by_unique = OrderedDict(sorted(num_books_in_libs.items(), key=lambda x: x[1], reverse=True))
 
+
+
+    library_definition_orig = deepcopy(library_definition)
     days_left = len_days
 
     def _get_score():
@@ -60,7 +71,11 @@ def process(input_file_path, output_file_path):
         best_lib_books = None
         for lib, definition in library_definition.items():
             days_available = (days_left - definition[1]) * definition[2]
-            sum_lib_per_days = sum([books_scores[i] for i in library_books[lib][:days_available]]) / definition[1]
+            used_books = library_books[lib][:days_available]
+            if len(used_books) == 0:
+                continue
+            score_by_uniqnes = sum([score_of_book_by_unique[book] for book in used_books]) / len(used_books)  # 1 best or 0.0001 worst
+            sum_lib_per_days = (sum([books_scores[i] for i in used_books]) / definition[1]) * score_by_uniqnes
             if best_lib_score is None or best_lib_score < sum_lib_per_days:
                 best_lib_score = sum_lib_per_days
                 best_lib = lib
@@ -91,21 +106,33 @@ def process(input_file_path, output_file_path):
     output_file.close()
 
     # compute score
-    # print(books)
-    # result_score = 0
-    #
-    # for day in enumerate(1, len_days + 1):
-    #     lib, books = result_libraries.popitem(last=False)
-    #     sign_up_len = library_definition[lib][1]
-    #
-    # for result_lib, result_books in result_libraries.items():
-    #     len_days -= library_definition[result_lib][1]
-    #     if len_days == 0:
-    #         break
-    #     for book in result_books:
-    #         result_score += books[book]
-    #         books[book] = 0
-    # print(result_score)
+    result_score = 0
+    already_scanned = []
+    current_in_scan = OrderedDict()
+
+    for day in range(0, len_days):
+        lib_to_remove = []
+        for lib in current_in_scan.keys():
+            for i in range(library_definition_orig[lib][2]):
+                book_index = current_in_scan[lib].pop(0)
+                if book_index not in already_scanned:
+                    result_score += books_scores_dict[book_index]
+                if len(current_in_scan[lib]) == 0:
+                    lib_to_remove.append(lib)
+                    break
+        for lib in lib_to_remove:
+            del current_in_scan[lib]
+        libs = list(result_libraries.keys())
+        if len(libs) == 0:
+            continue
+        selected_lib = libs[0]
+        library_definition_orig[selected_lib][1] = library_definition_orig[selected_lib][1] - 1
+        sign_up_len = library_definition_orig[selected_lib][1]
+        if sign_up_len == 0:
+            current_in_scan[selected_lib] = result_libraries[selected_lib]
+            del result_libraries[selected_lib]
+
+    print('score: {}'.format(result_score))
     # compute score
 
 
